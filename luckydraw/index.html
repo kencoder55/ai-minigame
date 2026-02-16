@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幸運抽獎</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #f0e6d3;
+    --bg-secondary: #e8dcc8;
+    --text-primary: #2c1810;
+    --text-secondary: #6b4c3b;
+    --card-front: linear-gradient(135deg, #fdfaf5 0%, #f5ede0 100%);
+    --card-back: linear-gradient(135deg, #c0392b 0%, #922b21 50%, #7b241c 100%);
+    --card-border: #c0392b;
+    --accent: #c0392b;
+    --accent-hover: #a93226;
+    --gold: #d4a84b;
+    --gold-light: #f0d78c;
+    --shadow-color: rgba(44, 24, 16, 0.15);
+    --shadow-heavy: rgba(44, 24, 16, 0.3);
+    --pill-bg: rgba(192, 57, 43, 0.08);
+    --pill-border: rgba(192, 57, 43, 0.15);
+    --pool-num: #8b6e5a;
+    --pool-num-gone: rgba(139, 110, 90, 0.15);
+    --modal-overlay: rgba(44, 24, 16, 0.6);
+    --modal-bg: #fdfaf5;
+    --btn-restart-bg: #27ae60;
+    --btn-restart-hover: #219a52;
+    --select-bg: #fdfaf5;
+    --select-border: #d4a84b;
+  }
+
+  html.dark {
+    --bg-primary: #1a1210;
+    --bg-secondary: #2c1f18;
+    --text-primary: #f0e6d3;
+    --text-secondary: #b8a08a;
+    --card-front: linear-gradient(135deg, #2c1f18 0%, #3a2a1f 100%);
+    --card-back: linear-gradient(135deg, #c0392b 0%, #922b21 50%, #7b241c 100%);
+    --card-border: #c0392b;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --shadow-heavy: rgba(0, 0, 0, 0.5);
+    --pill-bg: rgba(192, 57, 43, 0.15);
+    --pill-border: rgba(192, 57, 43, 0.3);
+    --pool-num: #8b7a6a;
+    --pool-num-gone: rgba(139, 122, 106, 0.12);
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --modal-bg: #2c1f18;
+    --select-bg: #2c1f18;
+    --select-border: #d4a84b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(192, 57, 43, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(212, 168, 75, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(192, 57, 43, 0.02) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    padding: 24px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', 'Noto Sans TC', serif;
+    font-weight: 900;
+    font-size: 2.4rem;
+    color: var(--accent);
+    letter-spacing: 4px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .header h1::before,
+  .header h1::after {
+    content: '✦';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.5em;
+    color: var(--gold);
+  }
+  .header h1::before { left: -30px; }
+  .header h1::after { right: -30px; }
+
+  .header .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    letter-spacing: 2px;
+  }
+
+  /* ── Setup Screen ── */
+  .setup-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: fadeSlideIn 0.6s ease;
+  }
+
+  .setup-screen.hidden { display: none; }
+
+  @keyframes fadeSlideIn {
+    0% { opacity: 0; transform: translateY(18px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .setup-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--pill-border);
+    border-radius: 24px;
+    padding: 40px 36px 36px;
+    text-align: center;
+    box-shadow: 0 8px 32px var(--shadow-color);
+    max-width: 360px;
+    width: 100%;
+  }
+
+  .setup-card .setup-icon {
+    font-size: 3.2rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .setup-card .setup-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .setup-card .setup-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .setup-select-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 28px;
+  }
+
+  .setup-select-wrapper::after {
+    content: '▾';
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 1.1rem;
+    pointer-events: none;
+  }
+
+  .setup-select {
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    color: var(--accent);
+    background: var(--select-bg);
+    border: 2.5px solid var(--select-border);
+    border-radius: 16px;
+    padding: 14px 50px 14px 30px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s ease;
+    min-width: 160px;
+  }
+
+  .setup-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.12);
+  }
+
+  .setup-select option {
+    font-size: 1.2rem;
+    padding: 8px;
+  }
+
+  .start-btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 6px;
+    padding: 14px 56px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff;
+    cursor: pointer;
+    box-shadow:
+      0 4px 16px rgba(192, 57, 43, 0.3),
+      0 1px 3px rgba(192, 57, 43, 0.2);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .start-btn:hover::before { left: 100%; }
+
+  .start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(192, 57, 43, 0.4);
+  }
+
+  .start-btn:active { transform: translateY(0); }
+
+  /* ── Game Screen ── */
+  .game-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .game-screen.active {
+    display: flex;
+    animation: fadeSlideIn 0.6s ease;
+  }
+
+  /* Stats pill */
+  .stats-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--pill-bg);
+    border: 1px solid var(--pill-border);
+    border-radius: 50px;
+    padding: 8px 24px;
+    margin-bottom: 32px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .stats-pill .divider {
+    width: 1px;
+    height: 16px;
+    background: var(--pill-border);
+  }
+
+  .stats-pill strong {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Card area */
+  .card-stage {
+    perspective: 800px;
+    width: 220px;
+    height: 300px;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: default;
+  }
+
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 8px 32px var(--shadow-color),
+      0 2px 8px var(--shadow-color);
+  }
+
+  .card-back {
+    background: var(--card-back);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+
+  .card-back-pattern {
+    position: absolute;
+    inset: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-back-pattern::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: repeating-conic-gradient(
+      rgba(255,255,255,0.03) 0% 25%,
+      transparent 0% 50%
+    ) 0 0 / 20px 20px;
+  }
+
+  .card-back-icon {
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.25);
+    z-index: 1;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+  }
+
+  .card-front {
+    background: var(--card-front);
+    border: 3px solid var(--card-border);
+    transform: rotateY(180deg);
+    overflow: hidden;
+  }
+
+  .card-front .ornament-top,
+  .card-front .ornament-bottom {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    opacity: 0.12;
+  }
+
+  .card-front .ornament-top {
+    top: 10px; left: 10px;
+    border-top: 3px solid var(--accent);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px 0 0 0;
+  }
+
+  .card-front .ornament-bottom {
+    bottom: 10px; right: 10px;
+    border-bottom: 3px solid var(--accent);
+    border-right: 3px solid var(--accent);
+    border-radius: 0 0 4px 0;
+  }
+
+  .card-front .corner {
+    position: absolute;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.4;
+  }
+
+  .card-front .corner-tl { top: 16px; left: 18px; }
+  .card-front .corner-br { bottom: 16px; right: 18px; transform: rotate(180deg); }
+
+  .card-number {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 5.5rem;
+    color: var(--accent);
+    line-height: 1;
+    text-shadow: 0 2px 4px rgba(192, 57, 43, 0.1);
+    position: relative;
+  }
+
+  .card-number::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  .card-label {
+    margin-top: 18px;
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+
+  @keyframes shuffleBounce {
+    0%   { transform: rotateY(0deg) scale(1); }
+    15%  { transform: rotateY(0deg) scale(0.92) translateX(-8px); }
+    30%  { transform: rotateY(0deg) scale(0.92) translateX(8px); }
+    45%  { transform: rotateY(0deg) scale(0.92) translateX(-5px); }
+    60%  { transform: rotateY(0deg) scale(0.92) translateX(5px); }
+    75%  { transform: rotateY(0deg) scale(0.96); }
+    100% { transform: rotateY(180deg) scale(1); }
+  }
+
+  .card.shuffling {
+    animation: shuffleBounce 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Buttons */
+  .draw-btn, .restart-btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 700;
+    letter-spacing: 6px;
+    padding: 14px 52px;
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 36px;
+    min-width: 200px;
+    font-size: 1.15rem;
+  }
+
+  .draw-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    box-shadow: 0 4px 16px rgba(192, 57, 43, 0.3), 0 1px 3px rgba(192, 57, 43, 0.2);
+  }
+
+  .draw-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .draw-btn:hover::before { left: 100%; }
+  .draw-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(192, 57, 43, 0.4); }
+  .draw-btn:active { transform: translateY(0); }
+  .draw-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .restart-btn {
+    background: linear-gradient(135deg, var(--btn-restart-bg), var(--btn-restart-hover));
+    box-shadow: 0 4px 16px rgba(39, 174, 96, 0.3);
+    display: none;
+    letter-spacing: 4px;
+  }
+
+  .restart-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(39, 174, 96, 0.4); }
+  .restart-btn:active { transform: translateY(0); }
+
+  /* Number pool */
+  .pool-section { width: 100%; }
+
+  .pool-title {
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .pool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 6px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px solid var(--pill-border);
+  }
+
+  .pool-num {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--pool-num);
+    border-radius: 8px;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+
+  .pool-num.drawn {
+    color: var(--pool-num-gone);
+    text-decoration: line-through;
+    transform: scale(0.85);
+  }
+
+  .pool-num.just-drawn { animation: popOut 0.6s ease forwards; }
+
+  @keyframes popOut {
+    0%   { transform: scale(1); color: var(--accent); }
+    30%  { transform: scale(1.3); color: var(--accent); }
+    100% { transform: scale(0.85); color: var(--pool-num-gone); text-decoration: line-through; }
+  }
+
+  /* History */
+  .history-section {
+    width: 100%;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--pill-border);
+  }
+
+  .history-title {
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .history-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--card-front);
+    border: 1.5px solid var(--pill-border);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent);
+    animation: chipIn 0.4s ease;
+  }
+
+  @keyframes chipIn {
+    0%   { opacity: 0; transform: scale(0.5) translateY(-10px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* Confetti */
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 10px; height: 10px;
+    top: -20px;
+    opacity: 0;
+    animation: confettiFall 1.5s ease forwards;
+  }
+
+  @keyframes confettiFall {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    padding: 20px;
+  }
+
+  .modal-overlay.visible {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  .modal-box {
+    background: var(--modal-bg);
+    border-radius: 24px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 24px 64px var(--shadow-heavy);
+    max-width: 360px;
+    width: 100%;
+    animation: modalPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes modalPop {
+    0%   { opacity: 0; transform: scale(0.8) translateY(20px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-box .modal-icon { font-size: 3rem; margin-bottom: 16px; }
+  .modal-box h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--accent); margin-bottom: 8px; }
+  .modal-box p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
+
+  .modal-restart-btn {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 4px;
+    padding: 12px 40px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--btn-restart-bg), var(--btn-restart-hover));
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(39, 174, 96, 0.3);
+    transition: all 0.25s ease;
+  }
+
+  .modal-restart-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(39, 174, 96, 0.4); }
+
+  /* Progress bar */
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--pill-bg);
+    border-radius: 3px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    border: 1px solid var(--pill-border);
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .header h1 { font-size: 1.8rem; letter-spacing: 2px; }
+    .header h1::before { left: -22px; }
+    .header h1::after { right: -22px; }
+    .card-stage { width: 180px; height: 250px; }
+    .card-number { font-size: 4.5rem; }
+    .draw-btn, .restart-btn { padding: 12px 36px; font-size: 1rem; }
+    .pool-grid { gap: 4px; padding: 12px; }
+    .pool-num { font-size: 0.65rem; }
+    .setup-card { padding: 30px 24px 28px; }
+    .setup-select { font-size: 1.6rem; padding: 12px 44px 12px 24px; min-width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="header">
+    <h1>幸運抽獎</h1>
+    <p class="subtitle">LUCKY DRAW</p>
+  </div>
+
+  <!-- ── Setup Screen ── -->
+  <div class="setup-screen" id="setupScreen">
+    <div class="setup-card">
+      <span class="setup-icon">🎴</span>
+      <p class="setup-label">設定抽獎數量</p>
+      <p class="setup-hint">選擇號碼範圍，從中逐一抽出所有號碼</p>
+      <div class="setup-select-wrapper">
+        <select class="setup-select" id="drawCountSelect"></select>
+      </div>
+      <br>
+      <button class="start-btn" id="startBtn" onclick="startGame()">開　始</button>
+    </div>
+  </div>
+
+  <!-- ── Game Screen ── -->
+  <div class="game-screen" id="gameScreen">
+    <div class="stats-pill">
+      <span>已抽 <strong id="drawnCount">0</strong> / <strong id="totalTarget">0</strong></span>
+      <span class="divider"></span>
+      <span>剩餘 <strong id="remainCount">0</strong></span>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="card-stage">
+      <div class="card" id="card">
+        <div class="card-face card-back">
+          <div class="card-back-pattern">
+            <span class="card-back-icon">?</span>
+          </div>
+        </div>
+        <div class="card-face card-front">
+          <div class="ornament-top"></div>
+          <div class="ornament-bottom"></div>
+          <span class="corner corner-tl" id="cornerTL">—</span>
+          <span class="corner corner-br" id="cornerBR">—</span>
+          <div class="card-number" id="cardNumber">—</div>
+          <div class="card-label">LUCKY NUMBER</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="draw-btn" id="drawBtn" onclick="draw()">抽　獎</button>
+    <button class="restart-btn" id="restartBtn" onclick="restart()">重新開始</button>
+
+    <div class="pool-section">
+      <div class="pool-title">號碼池 · Number Pool</div>
+      <div class="pool-grid" id="poolGrid"></div>
+    </div>
+
+    <div class="history-section" id="historySection" style="display:none;">
+      <div class="history-title">抽出順序 · Draw Order</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Completion modal -->
+<div class="modal-overlay" id="completionModal">
+  <div class="modal-box">
+    <div class="modal-icon">🎊</div>
+    <h2>全部抽完！</h2>
+    <p id="modalMsg">所有號碼都已經抽出</p>
+    <button class="modal-restart-btn" onclick="restart()">重新開始</button>
+  </div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+  /* ── Dark mode ── */
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add('dark');
+  }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    document.documentElement.classList.toggle('dark', e.matches);
+  });
+
+  /* ── State ── */
+  var pool = [];          // all 1-99
+  var drawn = [];         // numbers drawn so far
+  var maxDraws = 15;      // how many to draw (set by dropdown)
+  var isAnimating = false;
+
+  /* ── DOM refs ── */
+  var setupScreen      = document.getElementById('setupScreen');
+  var gameScreen       = document.getElementById('gameScreen');
+  var drawCountSelect  = document.getElementById('drawCountSelect');
+  var card             = document.getElementById('card');
+  var cardNumber       = document.getElementById('cardNumber');
+  var cornerTL         = document.getElementById('cornerTL');
+  var cornerBR         = document.getElementById('cornerBR');
+  var drawBtn          = document.getElementById('drawBtn');
+  var restartBtn       = document.getElementById('restartBtn');
+  var drawnCountEl     = document.getElementById('drawnCount');
+  var totalTargetEl    = document.getElementById('totalTarget');
+  var remainCountEl    = document.getElementById('remainCount');
+  var progressFill     = document.getElementById('progressFill');
+  var poolGrid         = document.getElementById('poolGrid');
+  var historySection   = document.getElementById('historySection');
+  var historyList      = document.getElementById('historyList');
+  var completionModal  = document.getElementById('completionModal');
+  var modalMsg         = document.getElementById('modalMsg');
+  var confettiContainer = document.getElementById('confettiContainer');
+
+  /* ── Populate dropdown 8-30 ── */
+  (function buildSelect() {
+    for (var i = 8; i <= 99; i++) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = i;
+      if (i === 15) opt.selected = true;
+      drawCountSelect.appendChild(opt);
+    }
+  })();
+
+  /* ── Start game ── */
+  function startGame() {
+    maxDraws = parseInt(drawCountSelect.value, 10);
+    pool = [];
+    drawn = [];
+    isAnimating = false;
+    for (var i = 1; i <= maxDraws; i++) pool.push(i);
+
+    // Switch screens
+    setupScreen.classList.add('hidden');
+    gameScreen.classList.add('active');
+
+    // Reset game UI
+    card.className = 'card';
+    cardNumber.textContent = '—';
+    cornerTL.textContent = '—';
+    cornerBR.textContent = '—';
+    updateStats();
+    drawBtn.style.display = '';
+    drawBtn.disabled = false;
+    restartBtn.style.display = 'none';
+    historySection.style.display = 'none';
+    historyList.innerHTML = '';
+    completionModal.classList.remove('visible');
+    progressFill.style.width = '0%';
+
+    buildPool();
+  }
+
+  function buildPool() {
+    poolGrid.innerHTML = '';
+    for (var i = 1; i <= maxDraws; i++) {
+      var el = document.createElement('div');
+      el.className = 'pool-num';
+      el.id = 'pool-' + i;
+      el.textContent = i;
+      poolGrid.appendChild(el);
+    }
+  }
+
+  function updateStats() {
+    var remaining = maxDraws - drawn.length;
+    drawnCountEl.textContent = drawn.length;
+    totalTargetEl.textContent = maxDraws;
+    remainCountEl.textContent = remaining;
+    progressFill.style.width = (drawn.length / maxDraws * 100) + '%';
+  }
+
+  /* ── Draw ── */
+  function draw() {
+    if (isAnimating || drawn.length >= maxDraws) return;
+    isAnimating = true;
+    drawBtn.disabled = true;
+
+    // Pick random from remaining pool
+    var idx = Math.floor(Math.random() * pool.length);
+    var num = pool[idx];
+    pool.splice(idx, 1);
+    drawn.push(num);
+
+    // Reset card for animation
+    card.classList.remove('flipped', 'shuffling');
+    void card.offsetWidth;
+
+    cardNumber.textContent = num;
+    cornerTL.textContent = num;
+    cornerBR.textContent = num;
+
+    card.classList.add('shuffling');
+
+    setTimeout(function() {
+      updateStats();
+
+      // Mark in pool grid
+      var poolEl = document.getElementById('pool-' + num);
+      if (poolEl) poolEl.classList.add('drawn', 'just-drawn');
+
+      // History chip
+      historySection.style.display = '';
+      var chip = document.createElement('div');
+      chip.className = 'history-chip';
+      chip.textContent = num;
+      historyList.appendChild(chip);
+
+      spawnConfetti();
+
+      // Check if all target draws done
+      if (drawn.length >= maxDraws) {
+        setTimeout(function() {
+          drawBtn.style.display = 'none';
+          restartBtn.style.display = '';
+          modalMsg.textContent = '已完成 ' + maxDraws + ' 次抽獎！';
+          completionModal.classList.add('visible');
+          spawnConfetti(40);
+        }, 600);
+      }
+
+      isAnimating = false;
+      drawBtn.disabled = drawn.length >= maxDraws;
+    }, 900);
+  }
+
+  /* ── Restart → back to setup ── */
+  function restart() {
+    completionModal.classList.remove('visible');
+    gameScreen.classList.remove('active');
+    setupScreen.classList.remove('hidden');
+  }
+
+  /* ── Confetti ── */
+  function spawnConfetti(count) {
+    var n = count || 15;
+    var colors = ['#c0392b', '#d4a84b', '#f0d78c', '#e74c3c', '#f39c12', '#27ae60', '#2980b9'];
+    for (var i = 0; i < n; i++) {
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      var size = 6 + Math.random() * 8;
+      piece.style.width = size + 'px';
+      piece.style.height = size + 'px';
+      piece.style.left = (10 + Math.random() * 80) + '%';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      piece.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+      piece.style.animationDelay = (Math.random() * 0.4) + 's';
+      confettiContainer.appendChild(piece);
+      (function(el) {
+        setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 3000);
+      })(piece);
+    }
+  }
+</script>
+</body>
+</html>
+
