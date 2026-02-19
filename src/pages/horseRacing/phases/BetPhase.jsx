@@ -27,7 +27,7 @@ export default function BetPhase({ state, placeBet, removeBet, nextBetPlayer }) 
   const isLastPlayer = currentBetPlayerIndex === players.length - 1;
 
   return (
-    <Box minHeight="100vh" sx={{ background: '#f5f5f5', pb: 4 }}>
+    <Box minHeight="100vh" sx={{ background: '#0d2b14', pb: 4 }}>
       {/* Header */}
       <Box sx={{ background: 'linear-gradient(135deg,#1565C0,#1976D2)', px: 3, py: 2 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -62,22 +62,22 @@ export default function BetPhase({ state, placeBet, removeBet, nextBetPlayer }) 
 
       <Box maxWidth={700} mx="auto" px={2} mt={2}>
         {/* Current player info */}
-        <Paper elevation={2} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Paper elevation={2} sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#1a3d22', border: '1px solid #2e6b3a' }}>
           <Box>
-            <Typography variant="subtitle2" color="text.secondary">目前投注玩家</Typography>
-            <Typography variant="h5" fontWeight={800}>{currentPlayer.name}</Typography>
+            <Typography variant="subtitle2" color="rgba(255,255,255,0.6)">目前投注玩家</Typography>
+            <Typography variant="h5" fontWeight={800} color="white">{currentPlayer.name}</Typography>
           </Box>
           <Box textAlign="right">
-            <Typography variant="caption" color="text.secondary">可用金幣</Typography>
-            <Typography variant="h6" fontWeight={700} color="primary">💰 {currentPlayer.coins}</Typography>
+            <Typography variant="caption" color="rgba(255,255,255,0.6)">可用金幣</Typography>
+            <Typography variant="h6" fontWeight={700} color="#f5c518">💰 {currentPlayer.coins}</Typography>
             {totalBet > 0 && (
-              <Typography variant="caption" color="text.secondary" display="block">已投 {totalBet} 幣</Typography>
+              <Typography variant="caption" color="rgba(255,255,255,0.5)" display="block">已投 {totalBet} 幣</Typography>
             )}
           </Box>
         </Paper>
 
         {/* Bet board */}
-        <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
+        <Paper elevation={1} sx={{ p: 2, mb: 2, background: 'transparent', boxShadow: 'none' }}>
           <BetBoard
             player={currentPlayer}
             onPlaceBet={(betKey, amount) => placeBet(currentPlayer.id, betKey, amount)}

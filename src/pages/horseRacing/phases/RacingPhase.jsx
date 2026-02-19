@@ -9,8 +9,8 @@
  *   raceFinished : (finalRanking: number[]) => void
  */
 
-import React, { useCallback, useEffect } from 'react';
-import { Box, Typography, Paper, Chip } from '@mui/material';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Box, Typography, Paper, Chip, Button } from '@mui/material';
 import { useRaceEngine } from '../hooks/useRaceEngine';
 import RacingCourt from '../components/RacingCourt';
 import HorseRankings from '../components/HorseRankings';
@@ -18,11 +18,11 @@ import PlayerBetsInfo from '../components/PlayerBetsInfo';
 
 export default function RacingPhase({ state, raceFinished }) {
   const { players, currentTurn, maxTurns } = state;
+  const [finalRanking, setFinalRanking] = useState(null);
 
-  // Brief delay after winner so user can see the result before transitioning
-  const handleRaceFinished = useCallback((finalRanking) => {
-    setTimeout(() => raceFinished(finalRanking), 1800);
-  }, [raceFinished]);
+  const handleRaceFinished = useCallback((ranking) => {
+    setFinalRanking(ranking);
+  }, []);
 
   const { horsePositions, ranking, finished, winnerHorseId, diceRoll, countdown, startRace } =
     useRaceEngine(handleRaceFinished);
@@ -78,9 +78,22 @@ export default function RacingPhase({ state, raceFinished }) {
             <Typography variant="h5" fontWeight={900} color="white">
               🏆 {winnerHorseId}號 率先衝線！
             </Typography>
-            <Typography variant="body2" color="rgba(255,255,255,0.85)" mt={0.5}>
-              正在計算結果…
-            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => finalRanking && raceFinished(finalRanking)}
+              sx={{
+                mt: 2,
+                background: 'white',
+                color: '#E65100',
+                fontWeight: 900,
+                fontSize: '1rem',
+                px: 5,
+                '&:hover': { background: '#fff3e0' },
+              }}
+            >
+              繼續 →
+            </Button>
           </Paper>
         )}
       </Box>
