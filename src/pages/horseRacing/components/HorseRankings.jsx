@@ -1,5 +1,6 @@
 /**
- * HorseRankings — Shows current or final horse standings in a compact row.
+ * HorseRankings — Shows current or final horse standings.
+ * Layout: rank-number header row + horse-icon row with number badge.
  *
  * Props:
  *   ranking : horseId[]  leader first
@@ -9,30 +10,82 @@
 import React from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { HORSE_MAP } from '../constants';
-import HorseAvatar from './HorseAvatar';
-
-const MEDALS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣'];
 
 export default function HorseRankings({ ranking, title = '名次' }) {
   return (
-    <Paper variant="outlined" sx={{ p: 1.5 }}>
+    <Paper variant="outlined" sx={{ p: 1.5, overflow: 'hidden' }}>
       <Typography variant="subtitle2" fontWeight={700} mb={1}>{title}</Typography>
-      <Box display="flex" gap={1} flexWrap="wrap">
+
+      {/* Grid: 7 equal columns */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', border: '1px solid #ccc', borderRadius: 1, overflow: 'hidden' }}>
+
+        {/* Row 1 — rank numbers */}
+        {ranking.map((_, index) => (
+          <Box
+            key={`rank-${index}`}
+            sx={{
+              background: '#f5f5f5',
+              borderRight: index < 6 ? '1px solid #ccc' : 'none',
+              borderBottom: '1px solid #ccc',
+              textAlign: 'center',
+              py: 0.5,
+            }}
+          >
+            <Typography variant="body2" fontWeight={900} sx={{ fontSize: '0.95rem', color: '#111' }}>
+              {index + 1}
+            </Typography>
+          </Box>
+        ))}
+
+        {/* Row 2 — horse icons with number badge */}
         {ranking.map((horseId, index) => {
           const horse = HORSE_MAP[horseId];
           return (
             <Box
               key={horseId}
-              display="flex" alignItems="center" gap={0.5}
-              sx={{ background: horse.bg, borderRadius: 1, px: 1, py: 0.5, minWidth: 58 }}
+              sx={{
+                position: 'relative',
+                background: horse.bg,
+                borderRight: index < 6 ? '1px solid #ccc' : 'none',
+                aspectRatio: '1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
             >
-              <Typography variant="caption" sx={{ fontSize: '1rem' }}>
-                {MEDALS[index] ?? `${index + 1}`}
-              </Typography>
-              <HorseAvatar horseId={horseId} size={22} />
-              <Typography variant="caption" fontWeight={700} color={horse.text}>
-                #{horseId}
-              </Typography>
+              {/* Horse icon */}
+              <Box
+                component="img"
+                src={horse.icon}
+                alt={horse.label}
+                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+
+              {/* Number badge */}
+              <Box sx={{
+                position: 'absolute',
+                top: '6%',
+                right: '6%',
+                width: '36%',
+                height: '36%',
+                borderRadius: '50%',
+                background: horse.text === '#fff' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Typography
+                  sx={{
+                    color: horse.text === '#fff' ? '#fff' : '#111',
+                    fontWeight: 900,
+                    fontSize: 'clamp(0.55rem, 2vw, 1rem)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {horseId}
+                </Typography>
+              </Box>
             </Box>
           );
         })}

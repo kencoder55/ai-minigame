@@ -14,13 +14,13 @@ export const HORSE_COLORS = {
 
 /** All 7 horses with their colour group, display colour, and image asset path. */
 export const HORSES = [
-  { id: 1, color: HORSE_COLORS.blue,   label: '1號', bg: '#1565C0', text: '#fff', image: '/horseRacing/assets/blue-1.png'   },
-  { id: 2, color: HORSE_COLORS.blue,   label: '2號', bg: '#1976D2', text: '#fff', image: '/horseRacing/assets/blue-2.png'   },
-  { id: 3, color: HORSE_COLORS.blue,   label: '3號', bg: '#42A5F5', text: '#fff', image: '/horseRacing/assets/blue-3.png'   },
-  { id: 4, color: HORSE_COLORS.yellow, label: '4號', bg: '#F9A825', text: '#333', image: '/horseRacing/assets/yellow-4.png' },
-  { id: 5, color: HORSE_COLORS.yellow, label: '5號', bg: '#FDD835', text: '#333', image: '/horseRacing/assets/yellow-5.png' },
-  { id: 6, color: HORSE_COLORS.red,    label: '6號', bg: '#C62828', text: '#fff', image: '/horseRacing/assets/red-6.png'    },
-  { id: 7, color: HORSE_COLORS.black,  label: '7號', bg: '#212121', text: '#fff', image: '/horseRacing/assets/black-7.png'  },
+  { id: 1, color: HORSE_COLORS.blue,   label: '1號', bg: '#1565C0', text: '#fff', image: '/horseRacing/assets/blue-1.png',   icon: '/horseRacing/assets/horse-icon-blue-1.png'   },
+  { id: 2, color: HORSE_COLORS.blue,   label: '2號', bg: '#1976D2', text: '#fff', image: '/horseRacing/assets/blue-2.png',   icon: '/horseRacing/assets/horse-icon-blue-2.png'   },
+  { id: 3, color: HORSE_COLORS.blue,   label: '3號', bg: '#42A5F5', text: '#fff', image: '/horseRacing/assets/blue-3.png',   icon: '/horseRacing/assets/horse-icon-blue-3.png'   },
+  { id: 4, color: HORSE_COLORS.yellow, label: '4號', bg: '#F9A825', text: '#333', image: '/horseRacing/assets/yellow-4.png', icon: '/horseRacing/assets/horse-icon-yellow-4.png' },
+  { id: 5, color: HORSE_COLORS.yellow, label: '5號', bg: '#FDD835', text: '#333', image: '/horseRacing/assets/yellow-5.png', icon: '/horseRacing/assets/horse-icon-yellow-5.png' },
+  { id: 6, color: HORSE_COLORS.red,    label: '6號', bg: '#C62828', text: '#fff', image: '/horseRacing/assets/red-6.png',    icon: '/horseRacing/assets/horse-icon-red-6.png'    },
+  { id: 7, color: HORSE_COLORS.black,  label: '7號', bg: '#212121', text: '#fff', image: '/horseRacing/assets/black-7.png',  icon: '/horseRacing/assets/horse-icon-black-7.png'  },
 ];
 
 /** Quick lookup by horse id */

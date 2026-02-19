@@ -13,7 +13,7 @@
 
 .container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   padding: 60px 20px;
   text-align: center;
 }
@@ -38,15 +38,22 @@
 
 .gamesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
   justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .gamesGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
 }
 
 .gameCard {
   background: var(--card-bg);
   border-radius: 20px;
-  padding: 40px;
+  padding: 24px 16px;
   text-decoration: none;
   color: inherit;
   box-shadow: 0 10px 30px var(--shadow-color);
@@ -75,32 +82,56 @@
 }
 
 .gameIcon {
-  font-size: 4rem;
-  margin-bottom: 20px;
+  font-size: 2.8rem;
+  margin-bottom: 12px;
 }
 
 .gameTitle {
   font-family: 'Playfair Display', 'Noto Sans TC', serif;
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .gameDesc {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 25px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+@media (min-width: 768px) {
+  .gameCard {
+    padding: 32px 20px;
+  }
+  .gameIcon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+  }
+  .gameTitle {
+    font-size: 1.5rem;
+  }
+  .gameDesc {
+    font-size: 0.95rem;
+  }
 }
 
 .playBtn {
+  margin-top: auto;
   background: var(--accent);
   color: white;
-  padding: 12px 30px;
+  padding: 10px 18px;
   border-radius: 50px;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.85rem;
   transition: background 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .playBtn {
+    padding: 12px 28px;
+    font-size: 0.95rem;
+  }
 }
 
 .gameCard:hover .playBtn {
