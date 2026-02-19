@@ -10,9 +10,10 @@
  *   nextBetPlayer : () => void
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box, Button, Typography, Paper, Chip, Divider, LinearProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText,
 } from '@mui/material';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import BetBoard from '../components/BetBoard';
@@ -20,11 +21,13 @@ import BetBoard from '../components/BetBoard';
 export default function BetPhase({ state, placeBet, removeBet, nextBetPlayer }) {
   const { players, currentBetPlayerIndex, currentTurn, maxTurns } = state;
   const currentPlayer = players[currentBetPlayerIndex];
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (!currentPlayer) return null;
 
   const totalBet = Object.values(currentPlayer.currentBets || {}).reduce((s, a) => s + a, 0);
   const isLastPlayer = currentBetPlayerIndex === players.length - 1;
+  const betEntries = Object.entries(currentPlayer.currentBets || {}).filter(([, amt]) => amt > 0);
 
   return (
     <Box minHeight="100vh" sx={{ background: '#0d2b14', pb: 4 }}>
@@ -88,7 +91,7 @@ export default function BetPhase({ state, placeBet, removeBet, nextBetPlayer }) 
         {/* Confirm / next player button */}
         <Button
           variant="contained" size="large" fullWidth
-          onClick={nextBetPlayer}
+          onClick={() => setConfirmOpen(true)}
           sx={{
             py: 1.5, fontWeight: 800, fontSize: '1.05rem',
             background: 'linear-gradient(90deg,#2e7d32,#43a047)',
@@ -99,6 +102,45 @@ export default function BetPhase({ state, placeBet, removeBet, nextBetPlayer }) 
             ? '結束投注 → 開始賽馬！🏇'
             : `結束投注 → 下一位: ${players[currentBetPlayerIndex + 1].name}`}
         </Button>
+
+        {/* Confirm dialog */}
+        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ fontWeight: 800 }}>確認投注</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              {currentPlayer.name} 的投注內容：
+            </Typography>
+            {betEntries.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">（未投注任何項目）</Typography>
+            ) : (
+              <List dense disablePadding>
+                {betEntries.map(([key, amt]) => (
+                  <ListItem key={key} disableGutters>
+                    <ListItemText
+                      primary={key}
+                      secondary={`${amt} 幣`}
+                      primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
+                      secondaryTypographyProps={{ variant: 'body2' }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+            <Typography variant="body2" mt={1}>
+              合計：<strong>{totalBet} 幣</strong>　剩餘：<strong>{currentPlayer.coins - totalBet} 幣</strong>
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmOpen(false)}>返回修改</Button>
+            <Button
+              variant="contained"
+              onClick={() => { setConfirmOpen(false); nextBetPlayer(); }}
+              sx={{ fontWeight: 700 }}
+            >
+              確認
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Summary of players who already bet */}
         {currentBetPlayerIndex > 0 && (
