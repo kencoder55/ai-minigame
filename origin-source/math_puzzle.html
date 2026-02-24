@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>數算解謎</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500;700&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --bg:#0c1220;--bg2:#111b2e;
+    --surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+    --card:#1a2a40;--card-border:rgba(251,191,36,0.15);
+    --gold:#fbbf24;--gold-dim:#b8860b;--gold-glow:rgba(251,191,36,0.25);
+    --teal:#38bdf8;--teal-dim:#0c4a6e;
+    --green:#4ade80;--red:#f87171;
+    --text:#e8edf4;--text2:#94a3b8;--text3:#64748b;
+    --font-display:'Bebas Neue',Impact,sans-serif;
+    --font-body:'Noto Sans TC',sans-serif;
+    --font-mono:'Fira Code',monospace;
+    --radius:14px;--radius-sm:10px;
+  }
+  html:not(.dark){
+    --bg:#f5f1eb;--bg2:#ece5d8;
+    --surface:rgba(0,0,0,0.03);--surface2:rgba(0,0,0,0.06);
+    --card:#fff;--card-border:rgba(180,83,9,0.18);
+    --gold:#b45309;--gold-dim:#92400e;--gold-glow:rgba(180,83,9,0.15);
+    --teal:#0369a1;--teal-dim:#bae6fd;
+    --green:#16a34a;--red:#dc2626;
+    --text:#1c1917;--text2:#57534e;--text3:#a8a29e;
+  }
+
+  body{
+    font-family:var(--font-body);color:var(--text);
+    background:var(--bg);
+    background-image:
+      radial-gradient(ellipse at 15% 85%,var(--gold-glow) 0%,transparent 55%),
+      radial-gradient(ellipse at 85% 15%,rgba(56,189,248,0.06) 0%,transparent 55%);
+    min-height:100vh;display:flex;justify-content:center;
+    padding:16px;overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  #app{
+    width:100%;max-width:440px;display:flex;flex-direction:column;gap:20px;
+    padding-bottom:32px;
+  }
+
+  /* ── Header ── */
+  header{text-align:center;padding-top:8px;}
+  h1{
+    font-family:var(--font-display);font-size:clamp(38px,10vw,52px);
+    letter-spacing:4px;color:var(--gold);line-height:1;
+    text-shadow:0 0 30px var(--gold-glow);
+  }
+  .subtitle{font-size:13px;color:var(--text3);margin-top:2px;letter-spacing:1px;}
+
+  /* ── Timer ── */
+  #timer-bar{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    background:var(--surface);border:1px solid var(--card-border);
+    border-radius:var(--radius-sm);padding:10px 20px;
+    backdrop-filter:blur(8px);
+  }
+  #timer-bar .icon{color:var(--gold);font-size:18px;}
+  #timer{
+    font-family:var(--font-display);font-size:32px;letter-spacing:3px;
+    color:var(--text);line-height:1;min-width:80px;text-align:center;
+  }
+
+  /* ── Target ── */
+  #target-section{
+    position:relative;text-align:center;
+    background:var(--surface);border:1px solid var(--card-border);
+    border-radius:var(--radius);padding:24px 20px 20px;
+    overflow:hidden;
+  }
+  .target-label{
+    font-size:14px;color:var(--text2);letter-spacing:2px;
+    text-transform:uppercase;font-weight:500;
+  }
+  #targetNumber{
+    font-family:var(--font-display);font-size:clamp(72px,18vw,96px);
+    color:var(--gold);line-height:1.1;
+    text-shadow:0 0 40px var(--gold-glow),0 2px 4px rgba(0,0,0,0.3);
+    transition:transform 0.3s,text-shadow 0.3s;
+  }
+  #targetNumber.celebrate{
+    animation:celebratePulse 0.6s ease-in-out 3;
+  }
+  @keyframes celebratePulse{
+    0%,100%{transform:scale(1);text-shadow:0 0 40px var(--gold-glow)}
+    50%{transform:scale(1.08);text-shadow:0 0 60px var(--gold-glow),0 0 100px var(--gold-glow)}
+  }
+  #celebrate{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  .particle{
+    position:absolute;width:6px;height:6px;border-radius:50%;bottom:30%;
+    animation:particleBurst 1.4s ease-out forwards;
+  }
+  @keyframes particleBurst{
+    0%{transform:translate(0,0) scale(1);opacity:1}
+    100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}
+  }
+
+  /* ── Number Cards ── */
+  #numbers-section{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  }
+  .number-card{
+    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    background:var(--card);border:2px solid var(--card-border);
+    border-radius:var(--radius-sm);cursor:pointer;
+    font-family:var(--font-display);font-size:clamp(32px,8vw,40px);
+    color:var(--text);letter-spacing:1px;
+    transition:all 0.2s;user-select:none;
+    box-shadow:0 4px 16px rgba(0,0,0,0.15);
+  }
+  .number-card:hover{
+    border-color:var(--gold);transform:translateY(-3px);
+    box-shadow:0 6px 24px var(--gold-glow);color:var(--gold);
+  }
+  .number-card:active{transform:translateY(0) scale(0.95);}
+  .number-card.anim-in{animation:cardIn 0.45s ease-out backwards;}
+  .number-card.anim-in:nth-child(1){animation-delay:0.05s}
+  .number-card.anim-in:nth-child(2){animation-delay:0.12s}
+  .number-card.anim-in:nth-child(3){animation-delay:0.19s}
+  .number-card.anim-in:nth-child(4){animation-delay:0.26s}
+  @keyframes cardIn{
+    from{transform:translateY(24px) scale(0.85);opacity:0}
+    to{transform:translateY(0) scale(1);opacity:1}
+  }
+
+  /* ── Input ── */
+  #input-section{display:flex;flex-direction:column;gap:10px;}
+  #expression{
+    width:100%;font-family:var(--font-mono);font-size:20px;
+    padding:14px 16px;border-radius:var(--radius-sm);
+    border:2px solid var(--surface2);background:var(--surface);
+    color:var(--text);outline:none;text-align:center;
+    transition:border-color 0.2s,box-shadow 0.2s;
+    caret-color:var(--gold);
+  }
+  #expression::placeholder{color:var(--text3);font-size:15px;}
+  #expression:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow);}
+  #expression.locked{opacity:0.5;cursor:not-allowed;}
+  .hint{font-size:12px;color:var(--text3);text-align:center;}
+
+  /* ── Keypad ── */
+  #keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+  .kbtn{
+    font-family:var(--font-mono);font-size:18px;font-weight:600;
+    padding:12px 0;border:1px solid var(--surface2);border-radius:var(--radius-sm);
+    background:var(--surface);color:var(--text);cursor:pointer;
+    transition:all 0.15s;user-select:none;
+  }
+  .kbtn:hover{background:var(--surface2);border-color:var(--gold);color:var(--gold);}
+  .kbtn:active{transform:scale(0.93);}
+  .kbtn.num{font-family:var(--font-display);font-size:22px;letter-spacing:1px;}
+  .kbtn.op{color:var(--gold);}
+  .kbtn.act{font-family:var(--font-body);font-size:14px;color:var(--text2);}
+  .kbtn.w2{grid-column:span 2;}
+  .kbtn.w3{grid-column:span 3;}
+
+  /* ── Feedback ── */
+  #feedback{
+    min-height:48px;display:flex;align-items:center;justify-content:center;
+    text-align:center;padding:10px 16px;border-radius:var(--radius-sm);
+    font-size:15px;font-weight:500;line-height:1.5;
+    transition:all 0.3s;
+  }
+  #feedback:empty{min-height:0;padding:0;}
+  #feedback.success{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+  #feedback.error{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
+  #feedback.info{background:rgba(56,189,248,0.1);color:var(--teal);border:1px solid rgba(56,189,248,0.15);}
+  #feedback.anim{animation:feedbackIn 0.35s ease-out;}
+  @keyframes feedbackIn{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* ── Buttons ── */
+  #actions{display:flex;flex-direction:column;gap:10px;}
+  .btn{
+    font-family:var(--font-body);font-size:16px;font-weight:700;
+    padding:14px 20px;border:none;border-radius:var(--radius-sm);
+    cursor:pointer;transition:all 0.2s;letter-spacing:1px;
+    user-select:none;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--gold),var(--gold-dim));
+    color:#0c1220;box-shadow:0 4px 20px var(--gold-glow);
+  }
+  .btn-primary:hover:not(:disabled){box-shadow:0 6px 28px var(--gold-glow);transform:translateY(-1px);}
+  .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn-secondary{
+    background:var(--surface2);color:var(--text2);
+    border:1px solid var(--card-border);
+  }
+  .btn-secondary:hover:not(:disabled){color:var(--text);border-color:var(--gold);}
+
+  /* ── Stats ── */
+  #stats{
+    display:flex;justify-content:center;gap:24px;
+    font-size:14px;color:var(--text2);
+  }
+  .stat{display:flex;align-items:center;gap:6px;}
+  .stat-icon{font-size:16px;}
+  .stat-val{font-family:var(--font-display);font-size:20px;color:var(--gold);letter-spacing:1px;}
+
+  /* ── Solution display ── */
+  #solution{
+    text-align:center;font-family:var(--font-mono);font-size:17px;
+    color:var(--teal);padding:8px;display:none;
+  }
+
+  /* ── Responsive ── */
+  @media(max-width:360px){
+    #app{gap:14px;}
+    .number-card{font-size:28px;}
+    .kbtn{padding:10px 0;font-size:16px;}
+    .kbtn.num{font-size:19px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>數算解謎</h1>
+    <div class="subtitle">用四個數字，算出目標</div>
+  </header>
+
+  <div id="timer-bar">
+    <span class="icon">&#9201;</span>
+    <span id="timer">00:00</span>
+  </div>
+
+  <div id="target-section">
+    <div class="target-label">目標</div>
+    <div id="targetNumber">--</div>
+    <div id="celebrate"></div>
+  </div>
+
+  <div id="numbers-section">
+    <div class="number-card anim-in" id="c0">-</div>
+    <div class="number-card anim-in" id="c1">-</div>
+    <div class="number-card anim-in" id="c2">-</div>
+    <div class="number-card anim-in" id="c3">-</div>
+  </div>
+
+  <div id="input-section">
+    <input type="text" id="expression" placeholder="使用按鍵輸入算式..." autocomplete="off" spellcheck="false" readonly>
+    <div class="hint">點按下方按鍵組合算式</div>
+    <div id="keypad">
+      <button class="kbtn num" data-char="1">1</button>
+      <button class="kbtn num" data-char="2">2</button>
+      <button class="kbtn num" data-char="3">3</button>
+      <button class="kbtn op" data-char="+">+</button>
+      <button class="kbtn op" data-char="&minus;">&minus;</button>
+      <button class="kbtn num" data-char="4">4</button>
+      <button class="kbtn num" data-char="5">5</button>
+      <button class="kbtn num" data-char="6">6</button>
+      <button class="kbtn op" data-char="&times;">&times;</button>
+      <button class="kbtn op" data-char="&divide;">&divide;</button>
+      <button class="kbtn num" data-char="7">7</button>
+      <button class="kbtn num" data-char="8">8</button>
+      <button class="kbtn num" data-char="9">9</button>
+      <button class="kbtn" data-char="(">(</button>
+      <button class="kbtn" data-char=")">)</button>
+      <button class="kbtn act w2" id="btnBack">&#9003;</button>
+      <button class="kbtn act w3" id="btnClear">清除</button>
+    </div>
+  </div>
+
+  <div id="feedback"></div>
+  <div id="solution"></div>
+
+  <div id="actions">
+    <button class="btn btn-primary" id="submitBtn">提交答案</button>
+    <div class="action-row">
+      <button class="btn btn-secondary" id="giveUpBtn">放棄</button>
+      <button class="btn btn-secondary" id="newGameBtn">新遊戲</button>
+    </div>
+  </div>
+
+  <div id="stats">
+    <div class="stat"><span class="stat-icon">&#128293;</span> 連勝 <span class="stat-val" id="streakVal">0</span></div>
+    <div class="stat"><span class="stat-icon">&#9889;</span> 最快 <span class="stat-val" id="bestVal">--</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ── Dark / Light Mode ── */
+  if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+    document.documentElement.classList.add('dark');
+  }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){
+    if(e.matches) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  });
+
+  /* ── State ── */
+  var state = {
+    numbers:[],target:0,solutionStr:'',
+    timerInterval:null,startTime:null,elapsed:0,
+    solved:false,gaveUp:false,
+    streak:0,bestTime:null
+  };
+
+  /* ── DOM refs ── */
+  var $timer = document.getElementById('timer');
+  var $target = document.getElementById('targetNumber');
+  var $celebrate = document.getElementById('celebrate');
+  var $expr = document.getElementById('expression');
+  var $feedback = document.getElementById('feedback');
+  var $solution = document.getElementById('solution');
+  var $submit = document.getElementById('submitBtn');
+  var $giveUp = document.getElementById('giveUpBtn');
+  var $streakVal = document.getElementById('streakVal');
+  var $bestVal = document.getElementById('bestVal');
+  var cards = [
+    document.getElementById('c0'),document.getElementById('c1'),
+    document.getElementById('c2'),document.getElementById('c3')
+  ];
+
+  /* ── Math engine ── */
+  var OPS = ['+','-','*','/'];
+  function opDisplay(o){return o==='*'?'\u00d7':o==='/'?'\u00f7':o==='-'?'\u2212':o;}
+
+  function calc(a,op,b){
+    switch(op){
+      case '+':return a+b;case '-':return a-b;
+      case '*':return a*b;case '/':return b===0?NaN:a/b;
+    }
+    return NaN;
+  }
+
+  function permutations(arr){
+    if(arr.length<=1) return [arr.slice()];
+    var res=[];
+    for(var i=0;i<arr.length;i++){
+      var rest=arr.slice(0,i).concat(arr.slice(i+1));
+      var perms=permutations(rest);
+      for(var j=0;j<perms.length;j++){
+        res.push([arr[i]].concat(perms[j]));
+      }
+    }
+    return res;
+  }
+
+  function findSolutions(nums){
+    var solutions={};
+    var perms=permutations(nums);
+    for(var pi=0;pi<perms.length;pi++){
+      var p=perms[pi];
+      for(var i=0;i<4;i++){for(var j=0;j<4;j++){for(var k=0;k<4;k++){
+        var o1=OPS[i],o2=OPS[j],o3=OPS[k];
+        var trees=[
+          {v:calc(calc(calc(p[0],o1,p[1]),o2,p[2]),o3,p[3]),
+           s:'((' +p[0]+' '+opDisplay(o1)+' '+p[1]+') '+opDisplay(o2)+' '+p[2]+') '+opDisplay(o3)+' '+p[3]},
+          {v:calc(calc(p[0],o1,calc(p[1],o2,p[2])),o3,p[3]),
+           s:'('+p[0]+' '+opDisplay(o1)+' ('+p[1]+' '+opDisplay(o2)+' '+p[2]+')) '+opDisplay(o3)+' '+p[3]},
+          {v:calc(calc(p[0],o1,p[1]),o2,calc(p[2],o3,p[3])),
+           s:'('+p[0]+' '+opDisplay(o1)+' '+p[1]+') '+opDisplay(o2)+' ('+p[2]+' '+opDisplay(o3)+' '+p[3]+')'},
+          {v:calc(p[0],o1,calc(calc(p[1],o2,p[2]),o3,p[3])),
+           s:p[0]+' '+opDisplay(o1)+' (('+p[1]+' '+opDisplay(o2)+' '+p[2]+') '+opDisplay(o3)+' '+p[3]+')'},
+          {v:calc(p[0],o1,calc(p[1],o2,calc(p[2],o3,p[3]))),
+           s:p[0]+' '+opDisplay(o1)+' ('+p[1]+' '+opDisplay(o2)+' ('+p[2]+' '+opDisplay(o3)+' '+p[3]+'))'}
+        ];
+        for(var t=0;t<trees.length;t++){
+          var r=trees[t].v;
+          if(isFinite(r) && r>0 && r<=100 && Math.abs(r-Math.round(r))<1e-9){
+            var key=Math.round(r);
+            if(!solutions[key]) solutions[key]=trees[t].s;
+          }
+        }
+      }}}
+    }
+    return solutions;
+  }
+
+  function generatePuzzle(){
+    for(var attempt=0;attempt<50;attempt++){
+      var nums=[];
+      for(var i=0;i<4;i++) nums.push(Math.floor(Math.random()*9)+1);
+      var sols=findSolutions(nums);
+      var keys=Object.keys(sols).map(Number);
+      var preferred=keys.filter(function(k){return k>=5 && k<=80;});
+      var pool=preferred.length>0?preferred:keys;
+      if(pool.length===0) continue;
+      var target=pool[Math.floor(Math.random()*pool.length)];
+      return {numbers:nums,target:target,solution:sols[target]};
+    }
+    return {numbers:[2,3,5,7],target:17,solution:'(2 + 5) \u00d7 3 \u2212 7 = 17'};
+  }
+
+  /* ── Timer ── */
+  function startTimer(){
+    state.startTime=Date.now();state.elapsed=0;
+    $timer.textContent='00:00';
+    if(state.timerInterval) clearInterval(state.timerInterval);
+    state.timerInterval=setInterval(function(){
+      state.elapsed=Math.floor((Date.now()-state.startTime)/1000);
+      $timer.textContent=formatTime(state.elapsed);
+    },250);
+  }
+  function stopTimer(){if(state.timerInterval){clearInterval(state.timerInterval);state.timerInterval=null;}}
+  function formatTime(s){
+    var m=Math.floor(s/60);var sec=s%60;
+    return (m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+  }
+
+  /* ── Animations ── */
+  function reanimateCards(){
+    cards.forEach(function(c){
+      c.classList.remove('anim-in');
+      void c.offsetWidth;
+      c.classList.add('anim-in');
+    });
+  }
+  function spawnParticles(){
+    $celebrate.innerHTML='';
+    var colors=['#fbbf24','#38bdf8','#4ade80','#f87171','#c084fc','#fb923c'];
+    for(var i=0;i<28;i++){
+      var dot=document.createElement('div');
+      dot.className='particle';
+      dot.style.left=40+Math.random()*20+'%';
+      dot.style.setProperty('--dx',(Math.random()-0.5)*260+'px');
+      dot.style.setProperty('--dy',(-80-Math.random()*180)+'px');
+      dot.style.backgroundColor=colors[Math.floor(Math.random()*colors.length)];
+      dot.style.animationDelay=Math.random()*0.3+'s';
+      dot.style.width=dot.style.height=(4+Math.random()*6)+'px';
+      $celebrate.appendChild(dot);
+    }
+    setTimeout(function(){$celebrate.innerHTML='';},2000);
+  }
+
+  /* ── Feedback ── */
+  function showFeedback(type,msg){
+    $feedback.className=type+' anim';
+    $feedback.textContent=msg;
+  }
+  function clearFeedback(){$feedback.className='';$feedback.textContent='';}
+
+  /* ── Game flow ── */
+  function newGame(){
+    var puzzle=generatePuzzle();
+    state.numbers=puzzle.numbers;
+    state.target=puzzle.target;
+    state.solutionStr=puzzle.solution;
+    state.solved=false;state.gaveUp=false;
+
+    $target.textContent=state.target;
+    $target.classList.remove('celebrate');
+    for(var i=0;i<4;i++) cards[i].textContent=state.numbers[i];
+    reanimateCards();
+
+    $expr.value='';inputLocked=false;$expr.classList.remove('locked');
+    $submit.disabled=false;$giveUp.disabled=false;
+    clearFeedback();
+    $solution.style.display='none';$solution.textContent='';
+    startTimer();
+  }
+
+  function checkAnswer(){
+    if(state.solved||state.gaveUp) return;
+    var raw=$expr.value.trim();
+    if(!raw){showFeedback('error','請輸入算式');return;}
+
+    var expr=raw
+      .replace(/\u00d7/g,'*').replace(/\u00f7/g,'/')
+      .replace(/\u2212/g,'-').replace(/\uff0b/g,'+')
+      .replace(/x/gi,'*').replace(/X/g,'*');
+
+    if(!/^[\d\s+\-*/().]+$/.test(expr)){
+      showFeedback('error','算式包含無效字符');return;
+    }
+
+    var numTokens=expr.match(/\d+/g);
+    if(!numTokens||numTokens.length!==4){
+      showFeedback('error','請恰好使用 4 個數字');return;
+    }
+    var used=numTokens.map(Number).slice().sort(function(a,b){return a-b;});
+    var given=state.numbers.slice().sort(function(a,b){return a-b;});
+    if(used.join(',')!==given.join(',')){
+      showFeedback('error','請使用提供的 4 個數字，每個只用一次');return;
+    }
+
+    var result;
+    try{result=new Function('return ('+expr+')')();}
+    catch(e){showFeedback('error','算式格式錯誤，請檢查括號');return;}
+
+    if(!isFinite(result)){showFeedback('error','計算錯誤（可能除以零）');return;}
+
+    if(Math.abs(result-state.target)<1e-6){
+      state.solved=true;stopTimer();
+      state.streak++;
+      if(state.bestTime===null||state.elapsed<state.bestTime) state.bestTime=state.elapsed;
+      updateStats();
+      showFeedback('success','\ud83c\udf89 \u6b63\u78ba\uff01\u7528\u6642 '+formatTime(state.elapsed));
+      $target.classList.add('celebrate');
+      spawnParticles();
+      inputLocked=true;$expr.classList.add('locked');$submit.disabled=true;$giveUp.disabled=true;
+    } else {
+      var display=Math.round(result*10000)/10000;
+      showFeedback('error','\u7b97\u5f0f\u7d50\u679c\u70ba '+display+'\uff0c\u76ee\u6a19\u662f '+state.target);
+    }
+  }
+
+  function giveUp(){
+    if(state.solved||state.gaveUp) return;
+    state.gaveUp=true;stopTimer();
+    state.streak=0;updateStats();
+    showFeedback('info','\u5df2\u653e\u68c4\uff0c\u4ee5\u4e0b\u662f\u5176\u4e2d\u4e00\u7a2e\u89e3\u6cd5\uff1a');
+    $solution.style.display='block';
+    $solution.textContent=state.solutionStr+' = '+state.target;
+    inputLocked=true;$expr.classList.add('locked');$submit.disabled=true;$giveUp.disabled=true;
+  }
+
+  function updateStats(){
+    $streakVal.textContent=state.streak;
+    $bestVal.textContent=state.bestTime!==null?formatTime(state.bestTime):'--';
+  }
+
+  /* ── Input helpers ── */
+  var inputLocked=false;
+  function insertChar(ch){
+    if(inputLocked) return;
+    var v=$expr.value;
+    $expr.value=v+ch;
+  }
+  function backspace(){
+    if(inputLocked) return;
+    var v=$expr.value;
+    if(v.length>0) $expr.value=v.slice(0,-1);
+  }
+  function clearInput(){
+    if(inputLocked) return;
+    $expr.value='';clearFeedback();
+  }
+
+  /* ── Event binding ── */
+  cards.forEach(function(c){
+    c.addEventListener('click',function(){insertChar(this.textContent);});
+  });
+  document.querySelectorAll('#keypad .kbtn[data-char]').forEach(function(btn){
+    btn.addEventListener('click',function(){insertChar(this.getAttribute('data-char'));});
+  });
+  document.getElementById('btnBack').addEventListener('click',backspace);
+  document.getElementById('btnClear').addEventListener('click',clearInput);
+  $submit.addEventListener('click',checkAnswer);
+  $giveUp.addEventListener('click',giveUp);
+  document.getElementById('newGameBtn').addEventListener('click',newGame);
+  $expr.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();checkAnswer();}
+  });
+
+  /* ── Init ── */
+  newGame();
+})();
+</script>
+</body>
+</html>
+

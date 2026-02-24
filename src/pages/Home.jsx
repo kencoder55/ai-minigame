@@ -14,6 +14,12 @@ const games = [
     title: '迷你賽馬',
     desc: '7匹馬、4種顏色、投注競猜！\n1至5位玩家同場競技，誰能贏得最多金幣？',
   },
+  {
+    path: '/mathpuzzle',
+    icon: '🔢',
+    title: '數算解謎',
+    desc: '用四個數字，加減乘除，算出目標數！\n考驗你的數學直覺與反應能力！',
+  },
 ]
 
 export default function Home() {
